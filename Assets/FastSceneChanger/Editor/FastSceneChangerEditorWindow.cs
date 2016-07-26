@@ -35,33 +35,37 @@ public class FastSceneChangerEditorWindow : EditorWindow
 
     void OnEnable()
     {
-        if (eyeIcon == null)
-            eyeIcon = EditorGUIUtility.FindTexture("d_ViewToolOrbit");
+        isGuiStyleInitedWhenProSkin = !EditorGUIUtility.isProSkin;
+        InitEyeIcon();
     }
 
+    void InitEyeIcon()
+    {
+        eyeIcon = EditorGUIUtility.FindTexture("ViewToolOrbit");
+    }
+
+
     #region GUI Styles
+    bool isGuiStyleInitedWhenProSkin = false;
     GUIStyle topMenuStyle = null;
     GUIStyle viewOptionPopupStyle = null;
     GUIStyle sceneBoxStyle = null;
+
+    GUIStyle sceneTextStyle = null;
     #endregion
 
     #region Colors
-    Color proTextColor = (Color)new Color32(180, 180, 180, 255);
-    Color proDisableTextColor = (Color)new Color32(122, 122, 122, 255);
-    Color proSelectTextColor = (Color)new Color32(255, 255, 255, 255);
-    Color proSelectDisableTextColor = (Color)new Color32(159, 171, 192, 255);
+    Color proTextColor = Color.clear;
+    Color proDisableTextColor = Color.clear;
 
-    Color proSelectBackground = (Color)new Color32(62, 95, 150, 255);
-    Color proDisalbeSelectBackground = (Color)new Color32(62, 87, 129, 255);
+    Color proSelectBackground = Color.clear;
+    Color proDisalbeSelectBackground = Color.clear;
 
-    Color stdTextColor = (Color)new Color32(0, 0, 0, 255);
-    Color stdDisableTextColor = (Color)new Color32(111, 111, 111, 255);
-    Color stdSelectTextColor = (Color)new Color32(255, 255, 255, 255);
-    Color stdSelectDisableTextColor = (Color)new Color32(179, 202, 242, 255);
+    Color stdTextColor = Color.clear;
+    Color stdDisableTextColor = Color.clear;
 
-    Color stdSelectBackground = (Color)new Color32(62, 125, 231, 255);
-    Color stdDisableSelectBackground = (Color)new Color32(102, 149, 229, 255);
-
+    Color stdSelectBackground = Color.clear;
+    Color stdDisableSelectBackground = Color.clear;
     #endregion
 
     #region for view type icon
@@ -75,8 +79,13 @@ public class FastSceneChangerEditorWindow : EditorWindow
     //Editor styles in here! : https://docs.unity3d.com/ScriptReference/EditorStyles.html
     void InitStyles()
     {
+        if (isGuiStyleInitedWhenProSkin != EditorGUIUtility.isProSkin)
+        {
+            InitEyeIcon();
+        }
+
         //Make Top Menu Style
-        if (topMenuStyle == null)
+        if (topMenuStyle == null || isGuiStyleInitedWhenProSkin != EditorGUIUtility.isProSkin)
         {
             topMenuStyle = new GUIStyle((GUIStyle)"Toolbar");
 
@@ -84,7 +93,7 @@ public class FastSceneChangerEditorWindow : EditorWindow
         }
 
         //Make View Option Popup style
-        if (viewOptionPopupStyle == null)
+        if (viewOptionPopupStyle == null || isGuiStyleInitedWhenProSkin != EditorGUIUtility.isProSkin)
         {
             viewOptionPopupStyle = new GUIStyle((GUIStyle)"TE Toolbar");
 
@@ -94,18 +103,40 @@ public class FastSceneChangerEditorWindow : EditorWindow
             viewOptionPopupStyle.normal = style;
         }
 
-        if (sceneBoxStyle == null)
+        if (sceneBoxStyle == null || isGuiStyleInitedWhenProSkin != EditorGUIUtility.isProSkin)
         {
             sceneBoxStyle = new GUIStyle((GUIStyle)"OL box");
 
             sceneBoxStyle.margin = new RectOffset(10, 10, 4, 4);
             sceneBoxStyle.stretchHeight = false;
         }
-    }
+        if (sceneTextStyle == null || isGuiStyleInitedWhenProSkin != EditorGUIUtility.isProSkin)
+        {
+            sceneTextStyle = new GUIStyle(EditorStyles.label);
+            sceneTextStyle.active = sceneTextStyle.onActive = sceneTextStyle.normal;
+        }
 
+        isGuiStyleInitedWhenProSkin = EditorGUIUtility.isProSkin;
+    }
+    void InitColors()
+    {
+        proTextColor = (Color)new Color32(255, 255, 255, 255);
+        proDisableTextColor = (Color)new Color32(255, 255, 255, 120);
+
+        proSelectBackground = (Color)new Color32(62, 95, 150, 255);
+        proDisalbeSelectBackground = (Color)new Color32(62, 87, 129, 255);
+
+        stdTextColor = (Color)new Color32(0, 0, 0, 255);
+        stdDisableTextColor = (Color)new Color32(0, 0, 0, 120);
+
+        stdSelectBackground = (Color)new Color32(62, 125, 231, 255);
+        stdDisableSelectBackground = (Color)new Color32(102, 149, 229, 255);
+    }
     void OnGUI()
     {
         InitStyles();
+        InitColors();
+
         Color defColor = GUI.color;
 
 
@@ -123,17 +154,50 @@ public class FastSceneChangerEditorWindow : EditorWindow
 
         scrollPosition = GUILayout.BeginScrollView(scrollPosition, (GUIStyle)"hostview");
         {
+            //get active scenes
+            Scene activeScene = EditorSceneManager.GetActiveScene();
+
             GUILayout.BeginVertical(sceneBoxStyle);
             {
-                //get active scenes
-                Scene activeScene = EditorSceneManager.GetActiveScene();
-
                 GUILayout.Label("Scenes In Build", (GUIStyle)"OL Title");
                 #region Show Build Scenes
 
                 //Get build scenes
                 EditorBuildSettingsScene[] scenes = EditorBuildSettings.scenes;
                 int scenesCount = scenes == null ? 0 : scenes.Length;
+
+                for (int i = 0; i < scenesCount; i++)
+                {
+                    bool isEnabled = scenes[i].enabled;
+                    bool isActiveScene = (activeScene.path == scenes[i].path);
+
+                    #region get sceneName(path)
+                    string sceneName = "";
+                    switch (viewOption)
+                    {
+                        case 0: //Show full path (remove "ASSETS/")
+                            sceneName = scenes[i].path.Remove(0, 7);
+                            break;
+                        case 1: //Show only scene name
+                            sceneName = System.IO.Path.GetFileName(scenes[i].path);
+                            break;
+                    }
+                    #endregion
+
+                    sceneName = isActiveScene ? "▶" + sceneName : "　" + sceneName;
+
+                    GUIContent buttonText = new GUIContent(sceneName);
+                    Rect rect = GUILayoutUtility.GetRect(buttonText, sceneTextStyle);
+
+                    GUI.color = isEnabled ? (EditorGUIUtility.isProSkin ? proTextColor : stdTextColor) :
+                                            (EditorGUIUtility.isProSkin ? proDisableTextColor : stdDisableTextColor);
+
+                    if (GUI.Button(rect, buttonText, sceneTextStyle) && isEnabled)
+                    {
+                        Debug.Log("ASE");
+                    }
+                    GUI.color = defColor;
+                }
 
                 #endregion
                 GUILayout.Space(50);
@@ -144,6 +208,9 @@ public class FastSceneChangerEditorWindow : EditorWindow
             GUILayout.BeginVertical(sceneBoxStyle);
             {
                 GUILayout.Label("All Scenes", (GUIStyle)"OL Title");
+                #region Show All Scenes
+
+                #endregion
                 GUILayout.Space(50);
 
             }
@@ -152,6 +219,7 @@ public class FastSceneChangerEditorWindow : EditorWindow
         GUILayout.EndScrollView();
 
         GUI.color = defColor;
+        Repaint();
     }
 
     void GetAllScenes()
