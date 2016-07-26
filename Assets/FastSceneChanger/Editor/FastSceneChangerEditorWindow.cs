@@ -43,7 +43,11 @@ public class FastSceneChangerEditorWindow : EditorWindow
     {
         eyeIcon = EditorGUIUtility.FindTexture("ViewToolOrbit");
     }
-
+    #region For double click check
+    int lastClickScene = -1;                        //Last click scene's index (if Last click in "All Scenes", plus Scenes In Build's Count)
+    float lastClickTime = 0;
+    const float DoubleClickDelay = 0.25f;
+    #endregion
 
     #region GUI Styles
     bool isGuiStyleInitedWhenProSkin = false;
