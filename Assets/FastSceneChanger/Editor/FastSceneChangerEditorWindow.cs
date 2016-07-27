@@ -65,8 +65,6 @@ namespace FastSceneChanger
             eyeIcon = EditorGUIUtility.FindTexture("ViewToolOrbit");
         }
 
-        int buildSceneCount = -1;
-
         int selectedSceneIndex = -1;                        //Last click scene's index (if Last click in "All Scenes", plus Scenes In Build's Count)
 
         #region For double click check
