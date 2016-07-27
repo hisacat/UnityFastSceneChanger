@@ -125,11 +125,15 @@ public class FastSceneChangerEditorWindow : EditorWindow
         if (sceneTextStyle == null || isGuiStyleInitedWhenProSkin != EditorGUIUtility.isProSkin)
         {
             sceneTextStyle = new GUIStyle(EditorStyles.label);
+            sceneTextStyle.padding = new RectOffset(10, 10, 2, 2);
+            sceneTextStyle.margin = new RectOffset(1, 1, 0, 0);
             sceneTextStyle.active = sceneTextStyle.onActive = sceneTextStyle.normal = sceneTextStyle.onNormal;
         }
         if (sceneSelectedTextStyle == null || isGuiStyleInitedWhenProSkin != EditorGUIUtility.isProSkin)
         {
             sceneSelectedTextStyle = new GUIStyle(EditorStyles.label);
+            sceneSelectedTextStyle.padding = new RectOffset(10, 10, 2, 2);
+            sceneSelectedTextStyle.margin = new RectOffset(1, 1, 0, 0);
             sceneSelectedTextStyle.onNormal.textColor = Color.white;
             sceneSelectedTextStyle.active = sceneSelectedTextStyle.onActive = sceneSelectedTextStyle.normal = sceneSelectedTextStyle.onNormal;
         }
@@ -236,10 +240,9 @@ public class FastSceneChangerEditorWindow : EditorWindow
         #endregion
 
         bool isNowSelectedScene = (lastClickScene == nowSceneIndex);
-        sceneName = isActiveScene ? "▶" + sceneName : "　" + sceneName;
 
-        GUIContent buttonText = new GUIContent(sceneName);
-        Rect sceneTextRect = GUILayoutUtility.GetRect(buttonText, sceneTextStyle);
+        GUIContent sceneText = new GUIContent(sceneName);
+        Rect sceneTextRect = GUILayoutUtility.GetRect(sceneText, sceneTextStyle);
 
         //Draw background when selected
         if (isNowSelectedScene)
@@ -252,10 +255,10 @@ public class FastSceneChangerEditorWindow : EditorWindow
         GUI.color = scene.enabled ? (EditorGUIUtility.isProSkin ? proTextColor : (isNowSelectedScene ? stdSelectTextColor : stdTextColor)) :
                                     (EditorGUIUtility.isProSkin ? proDisableTextColor : (isNowSelectedScene ? stdSelectDisableTextColor : stdDisableTextColor));
 
-        if (isNowSelectedScene)
-            GUI.Label(sceneTextRect, buttonText, sceneSelectedTextStyle);
-        else
-            GUI.Label(sceneTextRect, buttonText, sceneTextStyle);
+        GUIStyle nowSceneTextStyle = isNowSelectedScene ? sceneSelectedTextStyle : sceneTextStyle;
+        nowSceneTextStyle.fontStyle = isActiveScene ? FontStyle.Bold : FontStyle.Normal;
+
+        GUI.Label(sceneTextRect, sceneText, nowSceneTextStyle);
 
         Event e = Event.current;
         if (sceneTextRect.Contains(e.mousePosition))
